@@ -1,0 +1,73 @@
+esphome:
+  name: humidity_tank_weight
+  platform: ESP8266
+  board: d1_mini
+
+wifi:
+  ssid: "Your SSID"
+  password: "Your PASS"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Humidity Tank Fallback Hotspot"
+    password: "Put some password"
+
+captive_portal:
+
+logger:
+  baud_rate: 0
+
+# Enable Home Assistant API
+api:
+  password: "Put some password"
+
+ota:
+  password: "Put some password"
+  
+time:
+  - platform: sntp
+    timezone: Europe/Zagreb
+    id: my_time
+
+sensor:
+  - platform: hx711
+    name: "Humidity tank weight"
+    id: humidity_tank_weight
+    dout_pin: D2
+    clk_pin: D1
+    gain: 128
+    update_interval: 60s
+    filters:
+      - calibrate_linear:
+          - -628112 -> 0 # empty Humidifier
+          - -754321 -> 5500 # fully loaded Humidifier
+    unit_of_measurement: g
+
+  - platform: uptime
+    name: Humidity tank Uptime
+
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: Humidity tank WiFi Signal
+    update_interval: 60s
+
+binary_sensor:
+  - platform: template
+    name: "Humidity tank < 10%"
+    filters:
+      - delayed_off: 15s
+    lambda: |-
+      if (isnan(id(humidity_tank_weight).state)) {
+        return {};
+      } else if (id(humidity_tank_weight).state < 500) {
+        // Running
+        return true;
+      } else {
+        // Not running
+        return false;
+      }
+
+switch:
+  # Switch to restart the Humidity tank.
+  - platform: restart
+    name: Humidity tank Restart

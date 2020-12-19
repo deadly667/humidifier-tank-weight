@@ -1,0 +1,13 @@
+- alias: Humidifier water level under 10%
+  description: ''
+  id: 087b649c-4161-11eb-b378-0242ac130002
+  mode: single
+  trigger:
+  - entity_id: binary_sensor.humidity_tank_10
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data:
+      message: "💦 Hhmidifier water level under 10% 💦"
+    service: notify.telegrambotme
